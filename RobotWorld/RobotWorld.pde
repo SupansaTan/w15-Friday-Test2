@@ -18,6 +18,7 @@ void setup() {
   readfile();
   size(600, 600);
   world = new World();
+  world.snake = new Snake();
     
   int randX = (int)random(world.getMaxX()-1);
   int randY = (int)random(world.getMaxY()-1);
@@ -36,38 +37,39 @@ void setup() {
 }
 
   void readfile() {
-  BufferedReader reader = createReader("position.txt");
-  String line = null;
-  int i = 0;
-  try {
-    while ((line = reader.readLine()) != null) {
-        String[] pieces = split(line,",");
-        info[i][0] = int(pieces[0]);
-        info[i][1] = int(pieces[1]);
-        println(info[i][0]);
-        println(info[i][1]);
-        i++;
-      }
-    reader.close();
-  }
-  catch (NullPointerException e) {
-    e.printStackTrace();
-    load = false;
-  }
-  catch (IOException e) {
-    e.printStackTrace();
-    load = false;
-  }
-  if(i != 4){
-    load = false;
-  }
+    BufferedReader reader = createReader("position.txt");
+    String line = null;
+    int i = 0;
+    
+    try {
+      while ((line = reader.readLine()) != null) {
+          String[] pieces = split(line,",");
+          info[i][0] = int(pieces[0]);
+          info[i][1] = int(pieces[1]);
+          i++;
+        }
+      reader.close();
+    }
+    catch (NullPointerException e) {
+      e.printStackTrace();
+      load = false;
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+      load = false;
+    }
+    if(i != 4){
+      load = false;
+    }
 }
 
 void draw() {
   background(0);
   world.draw();
-  world.robot.draw();
-  world.target.draw();
+  //world.robot.draw();
+  //world.target.draw();
+  world.snake.drawSnake();
+  
   
   if (world.target.met(world.robot.getX(), world.robot.getY()) == true) {
     // when position of the robot is same as the target
@@ -86,6 +88,7 @@ class World {
   int maxX, maxY;
   Robot robot;
   Target target;
+  Snake snake;
   InputProcessor inputProcessor;
   String[] Map;
 
@@ -147,6 +150,48 @@ class World {
   }
 }
 
+class Snake {
+   int size;
+   Robot[] robots;
+   
+   Snake(){
+     size = 4;
+     robots = new Robot[20];
+     
+     for (int i=0; i<size; i++){
+       robots[i] = new Robot(i, 0, 0);
+     }
+   }
+   
+   void drawSnake(){
+     for (int i=0; i<size; i++){
+       robots[i].draw();
+     }
+   }
+}
+
+class Food{
+  int size;
+  int row, column;
+  
+  Food(){
+    row = (int)random(world.getMaxX());
+    column = (int)random(world.getMaxY());
+    size = 20;
+  }
+  
+  void draw(){
+    circle(row, column, size);
+  }
+  
+  boolean isAtFood(int r, int col){
+    if(r == row && col == column){
+      return true;
+    }
+    return false;
+  }
+}
+
 class Robot {
   int direction; // 0:headup 1:headright 2:headdown 3:headleft
   int posX, posY;
@@ -154,7 +199,7 @@ class Robot {
   int leftPosX, leftPosY;
   int rightPosX, rightPosY;
   
-  Robot(int px,int py,int di) { 
+  Robot(int px,int py,int di) {
     posX = px;
     posY = py;
     direction = di;
